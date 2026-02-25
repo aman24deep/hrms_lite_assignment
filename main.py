@@ -33,7 +33,7 @@ app = FastAPI(
     },
     docs_url="/swagger",  # Swagger UI
     redoc_url="/redoc",  # ReDoc
-    openapi_url="/openapi.json",  # OpenAPI schema
+    openapi_url="/openapi.json",  
 )
 
 # Enable CORS so frontend can talk to this API
