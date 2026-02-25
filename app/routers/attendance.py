@@ -48,6 +48,8 @@ def mark_attendance(attendance: schemas.AttendanceCreate, db: Session = Depends(
 def get_all_attendance(
     date_filter: Optional[date] = Query(None, description="Filter by specific date"),
     employee_id: Optional[str] = Query(None, description="Filter by employee ID"),
+    start_date: Optional[date] = Query(None, description="Filter by start date (use with end_date for range)"),
+    end_date: Optional[date] = Query(None, description="Filter by end date (use with start_date for range)"),
     db: Session = Depends(get_db)
 ):
     query = db.query(
@@ -57,6 +59,13 @@ def get_all_attendance(
     
     if date_filter:
         query = query.filter(models.Attendance.date == date_filter)
+    
+    if start_date and end_date:
+        query = query.filter(models.Attendance.date >= start_date, models.Attendance.date <= end_date)
+    elif start_date:
+        query = query.filter(models.Attendance.date >= start_date)
+    elif end_date:
+        query = query.filter(models.Attendance.date <= end_date)
     
     if employee_id:
         query = query.filter(models.Attendance.employee_id == employee_id)
