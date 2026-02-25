@@ -124,28 +124,6 @@ def delete_attendance(attendance_id: int, db: Session = Depends(get_db)):
     return {"message": "Attendance record deleted successfully"}
 
 
-@router.get("/date/{date_param}", response_model=List[schemas.AttendanceWithEmployee])
-def get_attendance_by_date(date_param: date, db: Session = Depends(get_db)):
-    """Get all attendance records for a specific date"""
-    results = db.query(
-        models.Attendance,
-        models.Employee.full_name
-    ).join(models.Employee, models.Attendance.employee_id == models.Employee.employee_id
-    ).filter(models.Attendance.date == date_param
-    ).order_by(models.Employee.full_name).all()
-    
-    attendance_list = []
-    for attendance, employee_name in results:
-        attendance_dict = {
-            "id": attendance.id,
-            "employee_id": attendance.employee_id,
-            "date": attendance.date,
-            "status": attendance.status,
-            "employee_name": employee_name
-        }
-        attendance_list.append(attendance_dict)
-    
-    return attendance_list
 
 
 @router.get("/today/present-count", response_model=schemas.TodayPresentCountResponse)
@@ -170,59 +148,5 @@ def get_today_present_count(db: Session = Depends(get_db)):
         "present_count": present_count,
         "absent_count": absent_count,
         "total_employees": total_employees
-    }
-
-
-@router.get("/monthly-report/{year}/{month}", response_model=schemas.MonthlyReportResponse)
-def get_monthly_attendance_report(
-    year: int,
-    month: int,
-    db: Session = Depends(get_db)
-):
-    """Get monthly attendance report for all employees"""
-    # Validate year and month
-    if year < 2000 or year > 2100:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Year must be between 2000 and 2100"
-        )
-    
-    if month < 1 or month > 12:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Month must be between 1 and 12"
-        )
-    
-    # Get all employees
-    employees = db.query(models.Employee).all()
-    
-    report_data = []
-    for employee in employees:
-        # Count present and absent days for this employee in the specified month
-        attendance_records = db.query(models.Attendance).filter(
-            models.Attendance.employee_id == employee.employee_id,
-            extract('year', models.Attendance.date) == year,
-            extract('month', models.Attendance.date) == month
-        ).all()
-        
-        present_days = sum(1 for record in attendance_records if record.status == models.AttendanceStatus.PRESENT)
-        absent_days = sum(1 for record in attendance_records if record.status == models.AttendanceStatus.ABSENT)
-        total_days = len(attendance_records)
-        
-        attendance_percentage = (present_days / total_days * 100) if total_days > 0 else 0.0
-        
-        report_data.append({
-            "employee_id": employee.employee_id,
-            "employee_name": employee.full_name,
-            "total_days": total_days,
-            "present_days": present_days,
-            "absent_days": absent_days,
-            "attendance_percentage": round(attendance_percentage, 2)
-        })
-    
-    return {
-        "year": year,
-        "month": month,
-        "report": report_data
     }
 

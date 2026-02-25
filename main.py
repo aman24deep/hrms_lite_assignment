@@ -10,7 +10,7 @@ from app.config import settings
 # Create all database tables on startup
 Base.metadata.create_all(bind=engine)
 
-# Enhanced API documentation for Swagger
+
 app = FastAPI(
     title="HRMS_LITE APIs",
     description="""
@@ -37,17 +37,16 @@ app = FastAPI(
 )
 
 # Enable CORS so frontend can talk to this API
-# TODO: In production, replace "*" with your actual frontend domain
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For now allowing all origins during development
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# Custom error handler to make validation errors more readable
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     errors = []
@@ -62,7 +61,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-# Handle database errors gracefully
 @app.exception_handler(SQLAlchemyError)
 async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
     return JSONResponse(
